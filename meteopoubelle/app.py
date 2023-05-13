@@ -8,7 +8,7 @@ import zoom as z
 
 st.set_page_config(layout="wide")
 
-'# ☀️ 🗑 Meteopoubelle 🌊'
+'# ☀️ 🗑 MétéoPoubelle 🌊'
 st.markdown('''
 Découvrez les zones d'accumulation de déchets diffus à Marseille !
 Data source: [Mer-Terre](https://www.zero-dechet-sauvage.org/ressources)
@@ -17,8 +17,6 @@ Data source: [Mer-Terre](https://www.zero-dechet-sauvage.org/ressources)
 st.header('Explorez la zone')
 
 df = pd.read_csv('dataset_meteo_filtre.csv').rename(columns={'LIEU_COORD_GPS_Y': 'lat', 'LIEU_COORD_GPS_X': 'lon'})
-
-st.write('Selectionner un scénario')
 
 rain = ["Pas de filtre", "Pluie"]
 wind_type = ["Pas de filtre", "Mistral", "Sirocco"]
