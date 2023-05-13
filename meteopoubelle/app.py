@@ -65,7 +65,7 @@ if (data_count < city_parts_number * 30):
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric(f':{color}[Nb de ramassages]', data_count)
+    st.metric(f':{color}[Nombre de ramassages]', data_count)
 
 with col2:
     if data_count == 0:
@@ -132,33 +132,41 @@ st.pydeck_chart(pdk.Deck(
 #    'lat','lon','LIEU_CODE_POSTAL']).sum(numeric_only=True).reset_index()
 
 ### Aggregate
-df.set_index(['LIEU_CODE_POSTAL', 'TYPE_LIEU_V2_1'])
-
+df.set_index(['TYPE_LIEU_V2_1'])
+print(df.columns)
 df_grouped_sized = df[[
-   "LIEU_CODE_POSTAL","TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
+   "TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
    "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL","NB_DECHET_SECTEUR_ALIMENTATION"
-]].groupby(["LIEU_CODE_POSTAL","TYPE_LIEU_V2_1"]).size()
+]].groupby(["TYPE_LIEU_V2_1"]).size()
 
 df_grouped= df[[
-   "LIEU_CODE_POSTAL","TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
+   "TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
    "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL","NB_DECHET_SECTEUR_ALIMENTATION"
-]].groupby(["LIEU_CODE_POSTAL","TYPE_LIEU_V2_1"]).sum().rename(columns={
+]].groupby(["TYPE_LIEU_V2_1"]).sum().rename(columns={
    "NB_DECHET_SECTEUR_TABAC" : "Tabac",
    "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL":"Pharmaceutique",
    "NB_DECHET_SECTEUR_ALIMENTATION": "Alimentataire"})
 
 ### Plot
-
+fig = plt.figure()
+ax = plt.subplot()
 df_grouped=df_grouped.reset_index()
-ax = df_grouped.plot(kind='barh', stacked=True, x="TYPE_LIEU_V2_1",y=[
-   "Tabac","Pharmaceutique","Alimentataire"])
+df_grouped.plot(kind='barh', stacked=True, x="TYPE_LIEU_V2_1", y=[
+   "Tabac","Pharmaceutique","Alimentataire"], ax=ax, cmap="Set3", ylabel="")
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.spines['bottom'].set_color('#DDDDDD')
+ax.tick_params(bottom=False, left=False)
+ax.xaxis.grid(False)
+
 plt.xticks(rotation=30)
 ax.bar_label(ax.containers[0], df_grouped_sized, label_type="edge")
 plt.legend(loc='best')
 plt.title("Nombre de déchets par secteur économique")
 
 
-
+st.pyplot(fig)
 
 
 
