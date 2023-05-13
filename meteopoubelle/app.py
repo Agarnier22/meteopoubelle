@@ -19,7 +19,7 @@ st.header('Explorez la zone')
 df = pd.read_csv('dataset_meteo_filtre.csv').rename(columns={'LIEU_COORD_GPS_Y': 'lat', 'LIEU_COORD_GPS_X': 'lon'})
 
 rain = ["Pas de filtre", "Pluie"]
-wind_type = ["Pas de filtre", "Mistral", "Sirocco"]
+wind_type = ["Pas de filtre", "Mistral", "Vent d'est"]
 meteo = ["Aucun", "Mistral","Sirocco", "Pluie"]
 season = ["Annuel", "Estival", "Hivernal"]
 arrondissement = [
