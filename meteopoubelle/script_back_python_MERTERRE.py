@@ -72,10 +72,5 @@ seasons = {
 data_type_filter['saison'] = data_type_filter['season'].map(seasons)
 del data_type_filter['season']
 
-data_type_filter = data_type_filter.fillna(0)
-data_type_filter = data_type_filter[data_type_filter['SURFACE'].astype(float) > 0]
-data_type_filter = data_type_filter[data_type_filter['Unnamed: 0'] != 484]
-data_type_filter['VOLUME_SURFACIQUE'] = data_type_filter['VOLUME_TOTAL'].astype(float)/data_type_filter['SURFACE'].astype(float)*100
-
 #export du dataset final
 data_type_filter.to_csv('dataset_meteo_filtre.csv')

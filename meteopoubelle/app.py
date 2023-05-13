@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
+import matplotlib.pyplot as plt
 import pydeck as pdk
 
 import zoom as z
@@ -20,19 +20,16 @@ df = pd.read_csv('dataset_meteo_filtre.csv').rename(columns={'LIEU_COORD_GPS_Y':
 
 st.write('Selectionner un scénario')
 
-rain_strength = ["Pas de filtre", "Faible", "Moyenne", "Forte"]
+rain = ["Pas de filtre", "Pluie"]
 wind_type = ["Pas de filtre", "Mistral", "Sirocco"]
-wind_strength = ["Pas de filtre", "Faible", "Moyenne", "Forte"]
-meteo = ["Aucun", "Mistral","Sirocco", "Pluie"]
 meteo = ["Aucun", "Mistral","Sirocco", "Pluie"]
 season = ["Annuel", "Estival", "Hivernal"]
 arrondissement = [
    "13001", "13002", "13003", "13004", "13005", "13005", "13006", "13007", "13008", "13009", "13010", "13011", "13012", "13013", "13014", "13015", "13016"
 ]
 
-rain_strength_choice = st.sidebar.selectbox(':rain_cloud: Pluie', rain_strength)
+rain_choice = st.sidebar.selectbox(':rain_cloud: Pluie', rain)
 wind_type_choice = st.sidebar.selectbox(':leaves: Vent', wind_type)
-wind_strength_choice = st.sidebar.selectbox('', wind_strength, label_visibility='collapsed')
 season_choice = st.sidebar.radio(':sunny: Saisonalité', season)
 city_part_choice = st.sidebar.multiselect('Arrondissements :', arrondissement)
 
@@ -46,6 +43,14 @@ if season_choice == "Estival":
     df = df[df['saison'].isin(["Eté", "Printemps"])]
 elif season_choice == "Hivernal":
     df = df[df['saison'].isin(["Hiver", "Automne"])]
+
+if rain_choice == "Pluie":
+    df = df[df['rr_monthly'] >= 80]
+
+if wind_type_choice == "Mistral":
+    df = df[df['wind_flow'].isin(['NNO', 'O', 'NO', 'ONO', 'N', 'OON'])]
+elif wind_type_choice == "Sirocco":
+    df = df[df['wind_flow'].isin(['SSE', 'SE', 'E', 'S', 'ESE', 'EES'])]
 
 data_count = len(df.index)
 color = "green"
@@ -77,8 +82,8 @@ with col3:
     st.metric("Déchets alimentaires par ramassage", alimentaire_count)
 
 df = df.fillna(0)
-df = df[df['SURFACE'].astype(float) > 0]
-df = df[df['Unnamed: 0'] != 484]
+df = df[df['SURFACE'].astype(float) >= 100]
+# df = df[df['Unnamed: 0'] != 252]
 df['VOLUME_SURFACIQUE'] = df['VOLUME_TOTAL'].astype(float)/df['SURFACE'].astype(float)*100
 
 df["lon"] = df["lon"].round(2)
@@ -118,6 +123,40 @@ st.pydeck_chart(pdk.Deck(
        ),
    ],
 ))
+
+# ### Pre process
+# df = df[df['LIEU_CODE_POSTAL'] == 13009]
+# df["lon"] = df["lon"].round(2)
+# df["lat"] = df["lat"].round(2)
+# df_grouped = df.groupby([
+#    'lat','lon','LIEU_CODE_POSTAL']).sum(numeric_only=True).reset_index()
+
+### Aggregate
+df.set_index(['LIEU_CODE_POSTAL', 'TYPE_LIEU_V2_1'])
+
+df_grouped_sized = df[[
+   "LIEU_CODE_POSTAL","TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
+   "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL","NB_DECHET_SECTEUR_ALIMENTATION"
+]].groupby(["LIEU_CODE_POSTAL","TYPE_LIEU_V2_1"]).size()
+
+df_grouped= df[[
+   "LIEU_CODE_POSTAL","TYPE_LIEU_V2_1","NB_DECHET_SECTEUR_TABAC",
+   "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL","NB_DECHET_SECTEUR_ALIMENTATION"
+]].groupby(["LIEU_CODE_POSTAL","TYPE_LIEU_V2_1"]).sum().rename(columns={
+   "NB_DECHET_SECTEUR_TABAC" : "Tabac",
+   "NB_DECHET_SECTEUR_PHARMACEUTIQUE/PARAMÉDICAL":"Pharmaceutique",
+   "NB_DECHET_SECTEUR_ALIMENTATION": "Alimentataire"})
+
+### Plot
+
+df_grouped=df_grouped.reset_index()
+ax = df_grouped.plot(kind='barh', stacked=True, x="TYPE_LIEU_V2_1",y=[
+   "Tabac","Pharmaceutique","Alimentataire"])
+plt.xticks(rotation=30)
+ax.bar_label(ax.containers[0], df_grouped_sized, label_type="edge")
+plt.legend(loc='best')
+plt.title("Nombre de déchets par secteur économique")
+
 
 
 
