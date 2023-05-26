@@ -23,6 +23,7 @@ _ZOOM_LEVELS = [
     0.00025,
 ]
 
+
 def get_zoom_level(distance: float) -> int:
     """Get the zoom level for a given distance in degrees.
 
@@ -42,6 +43,5 @@ def get_zoom_level(distance: float) -> int:
     for i in range(len(_ZOOM_LEVELS) - 1):
         if _ZOOM_LEVELS[i + 1] < distance <= _ZOOM_LEVELS[i]:
             return i
-
     # For small number of points the default zoom level will be used.
     return _DEFAULT_ZOOM_LEVEL
