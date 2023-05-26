@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pydeck as pdk
 
 import meteopoubelle.zoom as z
+from meteopoubelle.preprocess_data import extract_data
 
 st.set_page_config(layout="wide")
 
@@ -13,10 +14,10 @@ Découvrez les zones d'accumulation de déchets diffus à Marseille !
 Data source: [Mer-Terre](https://www.zero-dechet-sauvage.org/ressources)
 ''')
 
-st.header('Explorez la zone')
-
-df = pd.read_csv('data/dataset_meteo_filtre.csv').rename(
-    columns={'LIEU_COORD_GPS_Y': 'lat', 'LIEU_COORD_GPS_X': 'lon'})
+if 'df' not in st.session_state:
+    df = extract_data()
+else:
+    df = st.session_state.df
 
 rain = ["Pas de filtre", "Pluie"]
 wind_type = ["Pas de filtre", "Mistral", "Vent d'est"]
@@ -39,9 +40,9 @@ if len(city_part_choice) > 0:
     df = df[df['LIEU_CODE_POSTAL'].isin(map(float, city_part_choice))]
 
 if season_choice == "Estival":
-    df = df[df['saison'].isin(["Eté", "Printemps"])]
+    df = df[df['season'].isin(["Eté", "Printemps"])]
 elif season_choice == "Hivernal":
-    df = df[df['saison'].isin(["Hiver", "Automne"])]
+    df = df[df['season'].isin(["Hiver", "Automne"])]
 
 if rain_choice == "Pluie":
     df = df[df['rr_monthly'] >= 80]
@@ -80,10 +81,9 @@ with col3:
         alimentaire_count = round(df['NB_DECHET_SECTEUR_ALIMENTATION'].sum() / data_count)
     st.metric("Déchets alimentaires par ramassage", alimentaire_count)
 
-df = df.fillna(0)
-df = df[df['SURFACE'].astype(float) >= 100]
+df = df[df['SURFACE'] >= 100]
 
-df['VOLUME_SURFACIQUE'] = df['VOLUME_TOTAL'].astype(float) / df['SURFACE'].astype(float) * 100
+df['VOLUME_SURFACIQUE'] = df['VOLUME_TOTAL'] / df['SURFACE'] * 100
 
 df["lon"] = df["lon"].round(2)
 df["lat"] = df["lat"].round(2)
